@@ -1,0 +1,860 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Aquilibrium</title>
+<meta name="description" content="Aquilibrium: loja de aquarismo organizada por ecossistemas prontos. Projeto de Empreendedorismo e Inovação.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&family=Hanken+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* Um mundo só: a página desce da superfície do aquário até a areia do fundo.
+   Identidade vem dos slides: teal profundo, linha aqua, serifa clássica no nome. */
+:root{
+  color-scheme:dark;
+  --abyss:#04141a; --deep:#072229; --teal:#0d3840;
+  --foam:#ecf8f4; --mist:#a7cbc6; --aqua:#6fe3cf;
+  --leaf:#a5d94f; --amber:#f4bb4a; --coral:#ff8a66;
+  --line:rgba(111,227,207,.22);
+  --display:"Cormorant Garamond","Iowan Old Style",Georgia,serif;
+  --body:"Hanken Grotesk","Segoe UI",system-ui,sans-serif;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth;scroll-padding-top:84px}
+body{margin:0;background:var(--abyss);color:var(--foam);font:400 1.0625rem/1.6 var(--body);-webkit-font-smoothing:antialiased;overflow-x:hidden}
+img{max-width:100%;display:block}
+h1,h2,h3,p,ul,ol,blockquote,figure{margin:0;padding:0}
+ul,ol{list-style:none}
+h2,h3{text-wrap:balance}
+a{color:inherit}
+:focus-visible{outline:2px solid var(--aqua);outline-offset:3px;border-radius:4px}
+.wrap{width:min(1160px,100% - 40px);margin-inline:auto}
+.label{font:600 .78rem/1.3 var(--body);letter-spacing:.2em;text-transform:uppercase;color:var(--aqua)}
+h2{font:500 clamp(2.3rem,5.2vw,3.9rem)/1.06 var(--display);letter-spacing:-.005em}
+.lead{font-size:1.2rem;line-height:1.55;color:var(--mist);max-width:60ch}
+section{padding-block:clamp(64px,9vw,120px)}
+.head{display:grid;gap:14px;margin-bottom:clamp(32px,5vw,56px);max-width:760px}
+
+/* navegação em vidro */
+.nav{position:fixed;z-index:30;top:14px;left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:22px;width:max-content;max-width:calc(100% - 24px);
+  padding:9px 12px 9px 20px;border:1px solid rgba(236,248,244,.16);border-radius:999px;background:rgba(6,30,36,.5);
+  -webkit-backdrop-filter:blur(14px) saturate(150%);backdrop-filter:blur(14px) saturate(150%);box-shadow:inset 0 1px 0 rgba(255,255,255,.12),0 10px 30px rgba(0,0,0,.3)}
+.nav b{font:600 1.3rem/1 var(--display)}
+.nav ul{display:flex;gap:18px}
+.nav li a{font-size:.9rem;font-weight:500;color:var(--mist);text-decoration:none;white-space:nowrap}
+.nav li a:hover{color:var(--foam)}
+.nav .cta{font-size:.88rem;font-weight:600;text-decoration:none;color:#04201f;background:var(--aqua);padding:7px 15px;border-radius:999px;white-space:nowrap}
+@media (max-width:860px){.nav ul{display:none}.nav{gap:16px}}
+
+/* aquário */
+.tank{position:relative;height:clamp(640px,88vh,840px);overflow:hidden;background:#03151a url("{{img:agua}}") center/cover;cursor:crosshair;isolation:isolate}
+.tank canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
+#gl{z-index:0}#life{z-index:1}
+.tank::after{content:"";position:absolute;inset:auto 0 0;height:58%;background:linear-gradient(transparent,rgba(4,20,26,.5) 52%,rgba(4,20,26,.72) 82%,var(--abyss));z-index:2;pointer-events:none}
+.tank-copy{position:relative;z-index:3;height:100%;width:min(1160px,100% - 40px);margin-inline:auto;display:flex;flex-direction:column;justify-content:flex-end;padding-bottom:46px;gap:18px;pointer-events:none}
+.tank-copy>*{pointer-events:auto}
+h1{font:500 clamp(4.2rem,15.5vw,13rem)/.86 var(--display);letter-spacing:-.022em;margin-left:-.04em;text-shadow:0 4px 40px rgba(0,16,20,.65);pointer-events:none!important}
+.tank-sub{display:flex;flex-wrap:wrap;align-items:baseline;gap:6px 22px}
+.tank-sub p:first-child{font:600 .86rem/1.3 var(--body);letter-spacing:.24em;text-transform:uppercase;color:var(--aqua)}
+.tank-sub p:last-child{font:italic 500 clamp(1.3rem,2.6vw,1.75rem)/1.2 var(--display)}
+.picker{display:flex;flex-wrap:wrap;gap:8px}
+.picker button{font:600 .94rem/1 var(--body);color:var(--foam);padding:11px 16px;border-radius:999px;border:1px solid rgba(236,248,244,.26);background:rgba(4,26,30,.55);
+  -webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);cursor:pointer;transition:background .2s,color .2s,border-color .2s}
+.picker button:hover{border-color:var(--aqua)}
+.picker button[aria-pressed="true"]{background:var(--aqua);border-color:var(--aqua);color:#04201f}
+.readout{display:flex;flex-wrap:wrap;gap:4px 18px;font-size:.98rem;color:var(--foam);min-height:1.6em;text-shadow:0 1px 10px rgba(0,0,0,.7)}
+.readout b{font-weight:600}
+.hint{position:absolute;z-index:3;top:88px;right:max(20px,calc((100% - 1160px)/2));font-size:.88rem;color:var(--foam);opacity:.8;pointer-events:none;text-shadow:0 1px 8px rgba(0,0,0,.8)}
+
+/* problema */
+.thesis{display:grid;grid-template-columns:1.25fr 1fr;gap:clamp(32px,6vw,84px);align-items:end}
+.thesis h2{font-size:clamp(2.5rem,6.2vw,4.8rem)}
+.thesis h2 em{color:var(--aqua)}
+.steps3{display:grid;gap:18px;border-left:1px solid var(--line);padding-left:24px}
+.steps3 dt{font:600 .78rem/1.3 var(--body);letter-spacing:.2em;text-transform:uppercase;color:var(--aqua);margin-bottom:3px}
+.steps3 dd{margin:0;color:var(--foam)}
+dl{margin:0}
+@media (max-width:820px){.thesis{grid-template-columns:1fr}}
+
+/* ecossistemas */
+.eco{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}
+.eco article{display:flex;flex-direction:column;background:var(--deep);border:1px solid var(--line);border-radius:14px;overflow:hidden}
+.eco img{aspect-ratio:4/3;object-fit:cover;width:100%}
+.eco .in{display:flex;flex-direction:column;gap:8px;padding:16px 16px 18px;flex:1}
+.eco h3{font:600 1.6rem/1.1 var(--display)}
+.eco p{font-size:.98rem;color:var(--mist);flex:1}
+.link{align-self:flex-start;font:600 .92rem/1.2 var(--body);color:var(--aqua);background:none;border:0;padding:4px 0;cursor:pointer;text-decoration:underline;text-underline-offset:4px}
+@media (max-width:980px){.eco{grid-template-columns:repeat(2,1fr)}}
+@media (max-width:480px){.eco{grid-template-columns:1fr}}
+
+/* comparação */
+.versus{display:grid;grid-template-columns:1fr 1fr;margin-top:clamp(40px,6vw,64px);border-top:1px solid var(--line)}
+.versus>div{padding:16px 0;border-bottom:1px solid var(--line);font-size:1.05rem}
+.versus>div:nth-child(odd){padding-right:24px;color:var(--mist)}
+.versus>div:nth-child(even){padding-left:24px;border-left:1px solid var(--line)}
+.versus .th{font:600 .78rem/1.3 var(--body);letter-spacing:.2em;text-transform:uppercase}
+.versus .th:nth-child(even){color:var(--aqua)}
+
+/* pH */
+#ph{background:linear-gradient(var(--abyss),var(--deep) 18%,var(--deep) 82%,var(--abyss))}
+.lab{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);gap:clamp(24px,5vw,64px);align-items:start}
+.meter{display:grid;gap:12px}
+.bignum{display:flex;align-items:flex-end;gap:18px;flex-wrap:wrap}
+.bignum output{font:500 clamp(6rem,15vw,10.5rem)/.84 var(--display);font-variant-numeric:lining-nums tabular-nums;color:var(--ph,var(--aqua));transition:color .2s}
+.bignum div{padding-bottom:10px}
+.bignum strong{display:block;font-size:1.35rem;font-weight:600}
+.bignum span{color:var(--mist);font-size:1rem}
+input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:14px;border-radius:99px;margin:14px 0 2px;cursor:pointer;
+  background:linear-gradient(90deg,#c9772a,#e6b24c 30%,#8fd8e6 50%,#4ec7b0 70%,#3f7fd0)}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:32px;height:32px;border-radius:50%;background:var(--foam);border:5px solid var(--abyss);box-shadow:0 0 0 2px var(--foam)}
+input[type=range]::-moz-range-thumb{width:22px;height:22px;border-radius:50%;background:var(--foam);border:5px solid var(--abyss);box-shadow:0 0 0 2px var(--foam)}
+.scale{display:flex;justify-content:space-between;font-size:.9rem;color:var(--mist);font-variant-numeric:tabular-nums}
+.bar{display:grid;gap:6px;margin-top:14px}
+.bar>div:first-child{display:flex;justify-content:space-between;gap:12px;font-size:.98rem}
+.bar i{display:block;height:8px;border-radius:9px;background:rgba(236,248,244,.12);overflow:hidden}
+.bar i b{display:block;height:100%;width:30%;background:var(--amber);border-radius:9px;transition:width .2s,background .2s}
+.species{display:grid;gap:0;border-top:1px solid var(--line)}
+.species li{display:grid;grid-template-columns:1fr auto;gap:2px 14px;padding:13px 0;border-bottom:1px solid var(--line);align-items:center}
+.species strong{font-size:1.1rem;font-weight:600}
+.species small{grid-column:1;font-size:.92rem;color:var(--mist)}
+.pill{grid-column:2;grid-row:1/span 2;font-size:.84rem;font-weight:700;padding:5px 11px;border-radius:99px;border:1px solid currentColor;white-space:nowrap}
+.pill.ok{color:var(--leaf)}.pill.warn{color:var(--amber)}.pill.bad{color:var(--coral)}
+.note{font-size:.92rem;color:var(--mist);margin-top:12px}
+.punch{font:italic 500 clamp(1.6rem,3vw,2.2rem)/1.2 var(--display);margin-top:clamp(36px,5vw,56px);max-width:28em}
+.facts{display:grid;grid-template-columns:repeat(3,1fr);gap:clamp(20px,3vw,40px);margin-top:clamp(40px,6vw,64px)}
+.facts h3{font:600 1.55rem/1.15 var(--display);margin-bottom:8px}
+.facts p{font-size:1rem;color:var(--mist)}
+.cycle{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-top:12px;font-size:.92rem;font-weight:600}
+.cycle span{padding:4px 10px;border-radius:99px;border:1px solid currentColor}
+.cycle span:nth-of-type(1){color:var(--coral)}.cycle span:nth-of-type(2){color:var(--amber)}.cycle span:nth-of-type(3){color:var(--leaf)}
+@media (max-width:860px){.lab,.facts{grid-template-columns:1fr}}
+
+/* banda de foto */
+.band{position:relative;background:var(--abyss) url("{{img:despejo}}") 72% 30%/cover;padding-block:clamp(90px,14vw,170px)}
+.band::before{content:"";position:absolute;inset:0;background:linear-gradient(90deg,rgba(4,20,26,.94) 38%,rgba(4,20,26,.2) 78%),linear-gradient(var(--abyss),transparent 22%,transparent 78%,var(--abyss))}
+.band blockquote{position:relative;font:500 clamp(2.1rem,4.2vw,3.3rem)/1.1 var(--display);max-width:12.5em}
+.band p{position:relative;margin-top:16px;color:var(--mist);max-width:52ch}
+@media (max-width:760px){.band::before{background:rgba(4,20,26,.8)}}
+
+/* público */
+.people{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+.people img{aspect-ratio:16/10;object-fit:cover;width:100%;border-radius:12px}
+.people h3{font:600 1.6rem/1.1 var(--display);margin:14px 0 4px}
+.people p{color:var(--mist);font-size:1rem}
+.persona{margin-top:clamp(28px,4vw,44px);border-left:3px solid var(--aqua);padding-left:18px;max-width:64ch}
+.journey{display:grid;grid-template-columns:repeat(7,1fr);margin-top:clamp(40px,6vw,64px);counter-reset:j;position:relative}
+.journey::before{content:"";position:absolute;left:0;right:0;top:15px;height:1px;background:var(--aqua);opacity:.5}
+.journey li{counter-increment:j;position:relative;padding:0 10px 0 0;font-size:.98rem;font-weight:500;line-height:1.3}
+.journey li::before{content:counter(j);display:grid;place-items:center;width:31px;height:31px;border-radius:50%;background:var(--abyss);border:1px solid var(--aqua);color:var(--aqua);font-weight:700;font-size:.88rem;margin-bottom:10px;position:relative}
+@media (max-width:860px){.people{grid-template-columns:1fr}.journey{grid-template-columns:1fr;gap:12px}.journey::before{display:none}.journey li{display:flex;gap:12px;align-items:center}.journey li::before{margin:0;flex:none}}
+
+/* como vende */
+.sell{display:grid;grid-template-columns:repeat(3,1fr);border-top:1px solid var(--line)}
+.sell>div{padding:22px 24px 26px 0}
+.sell>div+div{padding-left:24px;border-left:1px solid var(--line)}
+.sell h3{font:600 1.6rem/1.12 var(--display);margin-bottom:8px}
+.sell p{color:var(--mist);font-size:1rem}
+@media (max-width:820px){.sell{grid-template-columns:1fr}.sell>div+div{padding-left:0;border-left:0;border-top:1px solid var(--line)}}
+.loop{margin-top:clamp(40px,6vw,60px);padding:clamp(20px,3vw,32px);border:1px solid var(--line);border-radius:14px;background:var(--deep);display:grid;grid-template-columns:minmax(0,.8fr) minmax(0,1.2fr);gap:clamp(20px,4vw,48px);align-items:center}
+.loop h3{font:600 1.9rem/1.1 var(--display);margin-bottom:8px}
+.loop p{color:var(--mist);font-size:1rem}
+.loop ol{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.loop li{padding:12px 14px;border-radius:10px;background:rgba(111,227,207,.08);font-weight:500;font-size:1rem;line-height:1.3}
+.loop li small{display:block;font-weight:400;color:var(--mist);font-size:.9rem;margin-top:2px}
+@media (max-width:820px){.loop{grid-template-columns:1fr}}
+@media (max-width:420px){.loop ol{grid-template-columns:1fr}}
+
+/* identidade */
+.ident{display:grid;grid-template-columns:1.2fr 1fr;gap:clamp(28px,5vw,64px)}
+.ident dl{display:grid;gap:20px}
+.ident dt{font:600 .78rem/1.3 var(--body);letter-spacing:.2em;text-transform:uppercase;color:var(--aqua);margin-bottom:4px}
+.ident dd{margin:0;font:500 clamp(1.4rem,2.5vw,1.85rem)/1.2 var(--display)}
+.values{display:flex;flex-wrap:wrap;gap:8px;align-content:flex-start}
+.values li{padding:8px 14px;border:1px solid var(--line);border-radius:99px;font-size:1rem;font-weight:500}
+@media (max-width:820px){.ident{grid-template-columns:1fr}}
+
+/* SWOT */
+.swot{display:grid;grid-template-columns:auto 1fr 1fr;gap:1px;background:var(--line);border:1px solid var(--line);border-radius:14px;overflow:hidden}
+.swot>*{background:var(--abyss)}
+.swot .ax{font:600 .78rem/1.3 var(--body);letter-spacing:.2em;text-transform:uppercase;color:var(--mist);padding:12px 16px}
+.swot .ax.v{writing-mode:vertical-rl;transform:rotate(180deg);text-align:center;padding:16px 10px}
+.q{padding:20px 22px 24px}
+.q h3{font:600 1.65rem/1.1 var(--display);margin-bottom:8px}
+.q li{font-size:1rem;padding:3px 0;color:var(--foam)}
+.q.s h3{color:var(--leaf)}.q.w h3{color:var(--amber)}.q.o h3{color:var(--aqua)}.q.t h3{color:var(--coral)}
+@media (max-width:640px){.swot{grid-template-columns:1fr}.swot .ax{display:none}}
+
+/* PESTEL */
+.pestel{display:grid;grid-template-columns:repeat(6,1fr);gap:0;margin-top:clamp(44px,6vw,72px);border-top:1px solid var(--line)}
+.pestel>div{padding:16px 16px 18px 0}
+.pestel>div+div{border-left:1px solid var(--line);padding-left:16px}
+.pestel b{display:block;font:500 3.3rem/.95 var(--display);color:var(--aqua)}
+.pestel h3{font-size:.95rem;font-weight:700;margin:4px 0 8px}
+.pestel p{font-size:.95rem;line-height:1.45;color:var(--mist)}
+@media (max-width:980px){.pestel{grid-template-columns:repeat(3,1fr)}.pestel>div:nth-child(4){border-left:0;padding-left:0}.pestel>div:nth-child(n+4){border-top:1px solid var(--line)}}
+@media (max-width:560px){.pestel{grid-template-columns:1fr 1fr}.pestel>div{border-left:0!important;padding-left:0!important;border-top:1px solid var(--line)}.pestel>div+div{padding-left:0}}
+
+/* Canvas */
+.bmc{display:grid;gap:10px;grid-template-columns:repeat(10,1fr);grid-template-areas:
+ "pa pa ac ac vp vp re re cs cs" "pa pa rs rs vp vp ch ch cs cs" "co co co co co rv rv rv rv rv"}
+.bmc>div{border:1px solid var(--line);border-radius:10px;padding:14px;background:var(--deep)}
+.bmc h3{font:600 .76rem/1.3 var(--body);letter-spacing:.14em;text-transform:uppercase;color:var(--aqua);margin-bottom:8px}
+.bmc li{font-size:.96rem;line-height:1.35;padding:2px 0}
+.bmc .vp{grid-area:vp;background:var(--teal);border-color:var(--aqua)}
+.bmc .vp li{font:500 1.35rem/1.2 var(--display);padding:4px 0}
+@media (max-width:860px){.bmc{grid-template-columns:1fr 1fr;grid-template-areas:"vp vp" "cs re" "ch rv" "ac rs" "pa co"}}
+@media (max-width:480px){.bmc{grid-template-columns:1fr;grid-template-areas:"vp" "cs" "re" "ch" "rv" "ac" "rs" "pa" "co"}}
+
+/* 5W2H */
+.plan{border-top:1px solid var(--line)}
+.plan>div{display:grid;grid-template-columns:150px 1fr;gap:6px 20px;padding:15px 0;border-bottom:1px solid var(--line);align-items:baseline}
+.plan dt{font:500 1.75rem/1 var(--display);color:var(--aqua)}
+.plan dt small{display:block;font:500 .86rem/1.4 var(--body);color:var(--mist)}
+.plan dd{margin:0}
+.plan .open dd{color:var(--amber)}
+@media (max-width:560px){.plan>div{grid-template-columns:1fr}}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:clamp(28px,5vw,64px);margin-top:clamp(44px,6vw,72px)}
+.two h3{font:600 1.75rem/1.12 var(--display);margin-bottom:10px}
+.two p,.two li{color:var(--mist);font-size:1rem}
+.two li{padding:9px 0;border-bottom:1px solid var(--line)}
+.two li strong{color:var(--foam);font-weight:600}
+@media (max-width:820px){.two{grid-template-columns:1fr}}
+
+/* perguntas */
+.qa{display:grid;grid-template-columns:1fr 1fr;gap:28px clamp(28px,5vw,64px)}
+.qa h3{font:600 1.5rem/1.15 var(--display);margin-bottom:6px}
+.qa p{color:var(--mist);font-size:1rem}
+@media (max-width:820px){.qa{grid-template-columns:1fr}}
+
+/* fundo do aquário */
+footer{position:relative;background:var(--abyss) url("{{img:agua}}") center bottom/cover;padding:clamp(120px,18vw,220px) 0 40px}
+footer::before{content:"";position:absolute;inset:0;background:linear-gradient(var(--abyss) 8%,rgba(4,20,26,.6) 55%,rgba(4,20,26,.72))}
+footer .wrap{position:relative;display:grid;gap:22px}
+footer blockquote{font:500 clamp(2.5rem,7vw,5.2rem)/1.03 var(--display);max-width:13em}
+footer p{font-size:.98rem;color:var(--foam);text-shadow:0 1px 8px rgba(0,0,0,.8)}
+
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}*{transition:none!important}}
+</style>
+</head>
+<body>
+
+<nav class="nav" aria-label="Seções">
+  <b>Aquilibrium</b>
+  <ul>
+    <li><a href="#ecossistemas">Ecossistemas</a></li>
+    <li><a href="#ph">Por que a água importa</a></li>
+    <li><a href="#publico">Público</a></li>
+    <li><a href="#vendas">Como vendemos</a></li>
+    <li><a href="#estrategia">Estratégia</a></li>
+  </ul>
+  <a class="cta" href="#plano">Plano de ação</a>
+</nav>
+
+<header class="tank" id="tank">
+  <canvas id="gl" aria-hidden="true"></canvas>
+  <canvas id="life" role="img" aria-label="Aquário animado. Os peixes mudam conforme o ecossistema escolhido."></canvas>
+  <p class="hint">Toque na água</p>
+  <div class="tank-copy">
+    <h1 id="title">Aquilibrium</h1>
+    <div class="tank-sub">
+      <p>Ecossistemas aquáticos</p>
+      <p>Ter um aquário não precisa ser complicado.</p>
+    </div>
+    <div class="picker" role="group" aria-label="Escolha um ecossistema">
+      <button type="button" data-mode="neutra" aria-pressed="true">Água neutra</button>
+      <button type="button" data-mode="acida" aria-pressed="false">Água ácida</button>
+      <button type="button" data-mode="camaroes" aria-pressed="false">Camarões</button>
+      <button type="button" data-mode="plantados" aria-pressed="false">Plantados</button>
+    </div>
+    <p class="readout" id="readout" aria-live="polite"><b>Para iniciantes</b><span>pH perto de 7</span><span>Guppy e platy</span></p>
+  </div>
+</header>
+
+<main>
+
+<section id="ideia">
+  <div class="wrap thesis">
+    <div>
+      <p class="label" style="margin-bottom:14px">A ideia</p>
+      <h2>Você escolhe o ecossistema. <em>A loja faz a parte difícil.</em></h2>
+    </div>
+    <dl class="steps3">
+      <div><dt>Problema</dt><dd>Muita gente quer ter aquário e desiste. É técnico demais: mistura peixe incompatível, erra a água e o peixe morre.</dd></div>
+      <div><dt>Solução</dt><dd>Cada setor da loja já reúne peixes, plantas, equipamentos e água preparada que funcionam juntos.</dd></div>
+      <div><dt>Receita</dt><dd>Vende o aquário montado e continua vendendo água em galão retornável, ração e manutenção.</dd></div>
+    </dl>
+  </div>
+</section>
+
+<section id="ecossistemas" style="padding-top:0">
+  <div class="wrap">
+    <div class="head">
+      <p class="label">O negócio</p>
+      <h2>Quatro setores no lugar de corredores de produto</h2>
+      <p class="lead">A Aquilibrium oferece consultoria técnica e montagem personalizada, com o portfólio organizado por ecossistemas já planejados.</p>
+    </div>
+    <div class="eco">
+      <article>
+        <img src="{{img:eco-neutra}}" alt="Guppies coloridos nadando entre plantas" loading="lazy">
+        <div class="in"><h3>Água neutra</h3><p>A porta de entrada para iniciantes, com guppy e platy.</p><button class="link" type="button" data-see="neutra">Ver no aquário</button></div>
+      </article>
+      <article>
+        <img src="{{img:eco-acida}}" alt="Acarás-disco com listras azuis e laranja" loading="lazy">
+        <div class="in"><h3>Água ácida</h3><p>Água macia para espécies amazônicas, como tetra-neon e acará-disco.</p><button class="link" type="button" data-see="acida">Ver no aquário</button></div>
+      </article>
+      <article>
+        <img src="{{img:eco-camaroes}}" alt="Camarão vermelho sobre um tronco com musgo" loading="lazy">
+        <div class="in"><h3>Camarões</h3><p>Camarões de água doce, com os minerais de que precisam para trocar de casca.</p><button class="link" type="button" data-see="camaroes">Ver no aquário</button></div>
+      </article>
+      <article>
+        <img src="{{img:eco-plantados}}" alt="Aquário plantado com folhagem densa e tronco" loading="lazy">
+        <div class="in"><h3>Plantados</h3><p>Aquários naturais, com plantas, pedras e troncos compondo a paisagem.</p><button class="link" type="button" data-see="plantados">Ver no aquário</button></div>
+      </article>
+    </div>
+    <div class="versus">
+      <div class="th">Loja comum</div><div class="th">Aquilibrium</div>
+      <div>Organiza por peixes, plantas e acessórios</div><div>Organiza por ecossistemas prontos</div>
+      <div>O cliente descobre sozinho o que combina</div><div>Fauna, flora e equipamentos já são compatíveis</div>
+      <div>O cliente corrige a água por conta própria</div><div>A água já vem certa para cada ecossistema</div>
+      <div>A relação termina no caixa</div><div>Acompanhamento nas semanas iniciais e manutenção</div>
+    </div>
+  </div>
+</section>
+
+<section id="ph">
+  <div class="wrap">
+    <div class="head">
+      <p class="label">Por que a água importa</p>
+      <h2>Arraste o pH e veja quem aguenta</h2>
+      <p class="lead">Cada peixe evoluiu numa água diferente. Água errada ou mudança brusca causa estresse, doença e morte.</p>
+    </div>
+    <div class="lab">
+      <div class="meter">
+        <div class="bignum">
+          <output id="phv" for="phr">7,0</output>
+          <div><strong id="pht">Água neutra</strong><span id="phs">Ponto de referência da escala</span></div>
+        </div>
+        <label for="phr" class="label" style="margin-top:6px">Ajuste o pH da água</label>
+        <input id="phr" type="range" min="5" max="9" step="0.1" value="7">
+        <div class="scale" aria-hidden="true"><span>5</span><span>6</span><span>7</span><span>8</span><span>9</span></div>
+        <div class="bar">
+          <div><span>Toxicidade da amônia</span><strong id="amt">Média</strong></div>
+          <i><b id="amb"></b></i>
+        </div>
+        <p class="note">Quanto maior o pH, mais tóxica fica a amônia. E a escala é logarítmica: cada ponto vale 10 vezes.</p>
+      </div>
+      <div>
+        <ul class="species" id="species">
+          <li data-min="5.5" data-max="6.8"><strong>Tetra-neon</strong><small>Amazônico, água ácida e macia</small><span class="pill"></span></li>
+          <li data-min="5.5" data-max="6.8"><strong>Acará-disco</strong><small>Amazônico, água ácida e macia</small><span class="pill"></span></li>
+          <li data-min="7" data-max="8.2"><strong>Guppy</strong><small>Neutra a levemente alcalina</small><span class="pill"></span></li>
+          <li data-min="7" data-max="8.2"><strong>Platy</strong><small>Neutra a levemente alcalina</small><span class="pill"></span></li>
+        </ul>
+        <p class="note">Faixas aproximadas, para fins didáticos.</p>
+      </div>
+    </div>
+    <p class="punch">O iniciante não sabe medir nem corrigir. Nossa água já vem certa para cada ecossistema.</p>
+    <div class="facts">
+      <div>
+        <h3>Da torneira à água preparada</h3>
+        <p>A água da torneira tem cloro ou cloramina, que matam peixes e bactérias, e varia em pH e dureza. Em geral, o preparo passa por osmose reversa e depois remineralização até os parâmetros de cada ecossistema.</p>
+      </div>
+      <div>
+        <h3>GH e KH</h3>
+        <p>GH são os minerais, como cálcio e magnésio, importantes para o camarão trocar de casca. KH segura o pH estável, com efeito tampão.</p>
+      </div>
+      <div>
+        <h3>Ciclagem</h3>
+        <p>No aquário novo, o filtro ainda não tem as bactérias boas. O ciclo leva algumas semanas, e é quando mais peixes morrem. Por isso acompanhamos o início.</p>
+        <div class="cycle"><span>Amônia</span>→<span>Nitrito</span>→<span>Nitrato</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="band">
+  <div class="wrap">
+    <blockquote>“Não vendemos apenas os componentes de um aquário. Entregamos um ecossistema pensado para funcionar em conjunto.”</blockquote>
+    <p>É inovação incremental: não criamos um mercado do zero. Reorganizamos o modelo de negócio, o processo e a experiência de comprar um aquário.</p>
+  </div>
+</div>
+
+<section id="publico">
+  <div class="wrap">
+    <div class="head">
+      <p class="label">Público-alvo e mercado</p>
+      <h2>Três perfis, uma mesma dificuldade</h2>
+    </div>
+    <div class="people">
+      <div><img src="{{img:perfil-iniciante}}" alt="Mulher sorrindo enquanto observa um aquário pequeno" loading="lazy"><h3>Iniciantes curiosos</h3><p>Têm receio da complexidade técnica.</p></div>
+      <div><img src="{{img:perfil-frustrado}}" alt="Homem desanimado com a mão na testa" loading="lazy"><h3>Aquaristas frustrados</h3><p>Já enfrentaram falhas e perdas.</p></div>
+      <div><img src="{{img:perfil-experiente}}" alt="Homem cuidando das plantas de um aquário" loading="lazy"><h3>Aquaristas experientes</h3><p>Buscam praticidade e conveniência.</p></div>
+    </div>
+    <p class="persona"><strong>Nossa persona:</strong> Lucas, 32 anos, mora em apartamento, quer um aquário plantado e tem medo de errar e matar os peixes. O público principal são iniciantes e frustrados. Experientes e clientes de arquitetura e imobiliárias vêm em seguida.</p>
+    <p class="label" style="margin-top:clamp(40px,6vw,64px)">Jornada de consumo</p>
+    <ol class="journey" style="margin-top:18px">
+      <li>Escolha do ecossistema</li><li>Escolha do aquário</li><li>Fauna e flora compatíveis</li><li>Equipamentos</li><li>Orientação</li><li>Água preparada</li><li>Manutenção periódica</li>
+    </ol>
+  </div>
+</section>
+
+<section id="vendas" style="padding-top:0">
+  <div class="wrap">
+    <div class="head">
+      <p class="label">Como vendemos e convencemos</p>
+      <h2>Quem compra errado gasta duas vezes</h2>
+      <p class="lead">O peixe morre e a pessoa compra de novo. Com a gente, ela acerta da primeira vez.</p>
+    </div>
+    <div class="sell">
+      <div><h3>Conteúdo nas redes</h3><p>Vídeos educativos, como “por que seu peixe morreu”, atraem quem já passou por isso.</p></div>
+      <div><h3>Parcerias B2B</h3><p>Pet shops, arquitetos e construtoras indicam clientes.</p></div>
+      <div><h3>Aquários de demonstração</h3><p>Na loja, cada ecossistema funciona de verdade, com QR Code educativo.</p></div>
+    </div>
+    <div class="loop">
+      <div>
+        <h3>O galão que volta</h3>
+        <p>A troca parcial de água gera a compra recorrente. É a receita mais importante, porque é previsível, e um marketplace online não consegue entregar água em galão retornável.</p>
+      </div>
+      <ol>
+        <li>Água preparada<small>Na loja, por ecossistema</small></li>
+        <li>Entrega programada<small>Logística local</small></li>
+        <li>Troca parcial de água<small>Feita periodicamente</small></li>
+        <li>Galão retorna à loja<small>Logística reversa, menos plástico</small></li>
+      </ol>
+    </div>
+  </div>
+</section>
+
+<section id="identidade" style="padding-top:0">
+  <div class="wrap">
+    <div class="head"><p class="label">Identidade organizacional</p><h2>Nosso propósito guia tudo o que fazemos</h2></div>
+    <div class="ident">
+      <dl>
+        <div><dt>Missão</dt><dd>Simplificar o aquarismo, oferecendo soluções integradas que proporcionem praticidade ao consumidor e melhores condições de vida aos animais.</dd></div>
+        <div><dt>Visão</dt><dd>Ser referência em aquarismo acessível, inovador e responsável.</dd></div>
+      </dl>
+      <div style="display:grid;gap:24px;align-content:start">
+        <div><p class="label" style="margin-bottom:10px">Valores</p>
+          <ul class="values"><li>Bem-estar animal</li><li>Responsabilidade ambiental</li><li>Inovação</li><li>Conhecimento</li><li>Transparência</li><li>Qualidade</li><li>Simplicidade</li></ul></div>
+        <div><p class="label" style="margin-bottom:6px">Objetivo estratégico</p><p style="color:var(--mist)">Reduzir as barreiras técnicas para entrada no aquarismo, com ecossistemas estruturados e soluções de manutenção que tornem o hobby acessível.</p></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="estrategia" style="padding-top:0">
+  <div class="wrap">
+    <div class="head"><p class="label">Análise SWOT e PESTEL</p><h2>O que depende de nós e o que vem de fora</h2></div>
+    <div class="swot">
+      <div class="ax"></div><div class="ax">Ajuda</div><div class="ax">Atrapalha</div>
+      <div class="ax v">Interno</div>
+      <div class="q s"><h3>Forças</h3><ul><li>Modelo simples para iniciantes</li><li>Venda exclusiva de água preparada</li><li>Organização por ecossistemas</li><li>Atendimento educativo</li></ul></div>
+      <div class="q w"><h3>Fraquezas</h3><ul><li>Custo operacional elevado</li><li>Exigência de equipe especializada</li><li>Logística complexa da água</li><li>Manutenção constante dos animais</li></ul></div>
+      <div class="ax v">Externo</div>
+      <div class="q o"><h3>Oportunidades</h3><ul><li>Atração de novos hobbistas</li><li>Crescimento do bem-estar animal</li><li>Receita recorrente previsível</li><li>Expansão para serviços digitais</li></ul></div>
+      <div class="q t"><h3>Ameaças</h3><ul><li>Concorrentes replicarem o modelo</li><li>Crises econômicas</li><li>Mudanças na legislação de fauna</li><li>Doenças no estoque vivo</li></ul></div>
+    </div>
+    <div class="pestel">
+      <div><b>P</b><h3>Político</h3><p>Proteção da fauna define o que pode ser criado e vendido. Só fornecedores regularizados.</p></div>
+      <div><b>E</b><h3>Econômico</h3><p>Hobby depende da renda disponível. A receita recorrente compensa.</p></div>
+      <div><b>S</b><h3>Social</h3><p>Cresce a preocupação com o bem-estar animal e o desejo por um aquarismo mais acessível.</p></div>
+      <div><b>T</b><h3>Tecnológico</h3><p>Filtragem, LED, medidores digitais, tratamento de água e QR Codes educativos.</p></div>
+      <div><b>E</b><h3>Ambiental</h3><p>Compatibilidade reduz a mortalidade. Galões retornáveis reduzem o plástico.</p></div>
+      <div><b>L</b><h3>Legal</h3><p>Normas do IBAMA, licenças de funcionamento, Código de Defesa do Consumidor e comércio de animais.</p></div>
+    </div>
+  </div>
+</section>
+
+<section id="canvas" style="padding-top:0">
+  <div class="wrap">
+    <div class="head"><p class="label">Business Model Canvas</p><h2>Como criamos, entregamos e capturamos valor</h2></div>
+    <div class="bmc">
+      <div style="grid-area:pa"><h3>Parcerias-chave</h3><ul><li>Fornecedores regularizados</li><li>Pet shops</li><li>Lojas de plantas</li><li>Paisagistas</li><li>Marceneiros e arquitetos</li><li>Imobiliárias e construtoras</li></ul></div>
+      <div style="grid-area:ac"><h3>Atividades principais</h3><ul><li>Diagnóstico e planejamento</li><li>Montagem técnica</li><li>Controle de qualidade da água</li></ul></div>
+      <div style="grid-area:rs"><h3>Recursos principais</h3><ul><li>Equipe especializada</li><li>Estrutura para tratar e armazenar água</li><li>Estoque vivo</li><li>Galões</li></ul></div>
+      <div class="vp"><h3>Proposta de valor</h3><ul><li>Ecossistemas planejados</li><li>Água preparada por biótopo</li><li>Segurança biológica</li><li>Tranquilidade e prevenção</li></ul></div>
+      <div style="grid-area:re"><h3>Relacionamento</h3><ul><li>Acompanhamento nas semanas iniciais</li><li>Atendimento educativo e consultivo</li></ul></div>
+      <div style="grid-area:ch"><h3>Canais</h3><ul><li>Loja física integrada</li><li>Logística local, com entrega programada</li><li>Redes sociais</li></ul></div>
+      <div style="grid-area:cs"><h3>Segmentos de clientes</h3><ul><li>Iniciantes curiosos</li><li>Aquaristas frustrados</li><li>Aquaristas experientes</li><li>Clientes de arquitetura</li></ul></div>
+      <div style="grid-area:co"><h3>Estrutura de custos</h3><ul><li>Opex elevado: energia, climatização, ração</li><li>Custos logísticos</li><li>Folha de pagamento especializada</li></ul></div>
+      <div style="grid-area:rv"><h3>Fontes de receita</h3><ul><li>Consultoria e montagem</li><li>Venda recorrente de água e insumos</li><li>Assinatura de manutenção</li></ul></div>
+    </div>
+  </div>
+</section>
+
+<section id="plano" style="padding-top:0">
+  <div class="wrap">
+    <div class="head"><p class="label">Plano de ação · 5W2H</p><h2>Do planejamento à execução</h2></div>
+    <dl class="plan">
+      <div><dt>What<small>O quê</small></dt><dd>Loja de aquarismo organizada por ecossistemas, com água preparada.</dd></div>
+      <div><dt>Why<small>Por quê</small></dt><dd>Facilitar a entrada de iniciantes e reduzir erros de manejo e mortalidade.</dd></div>
+      <div><dt>Where<small>Onde</small></dt><dd>Loja física acessível, por causa dos galões, com apoio digital e entrega local programada.</dd></div>
+      <div><dt>When<small>Quando</small></dt><dd>Após a estruturação física, a homologação de fornecedores e a validação com a pesquisa.</dd></div>
+      <div><dt>Who<small>Quem</small></dt><dd>Equipe capacitada em biologia aquática e atendimento.</dd></div>
+      <div><dt>How<small>Como</small></dt><dd>Organizando fauna, flora e equipamentos por compatibilidade.</dd></div>
+      <div class="open"><dt>How much<small>Quanto</small></dt><dd>A definir, após o levantamento de Capex e Opex.</dd></div>
+    </dl>
+    <div class="two">
+      <div>
+        <h3>O que vai compor o valor</h3>
+        <ul>
+          <li><strong>Capex, o investimento inicial:</strong> aquários, equipamentos de tratamento de água, galões e reforma.</li>
+          <li><strong>Opex, o custo mensal:</strong> energia, salários, aluguel e manutenção dos animais.</li>
+        </ul>
+      </div>
+      <div>
+        <h3>Próximo passo: pesquisa de mercado</h3>
+        <p>Entrevistas com quem nunca teve aquário, quem desistiu e quem tem hoje, para confirmar o interesse por ecossistemas planejados com água preparada e medir quanto pagariam pela praticidade e segurança.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="perguntas" style="padding-top:0">
+  <div class="wrap">
+    <div class="head"><p class="label">Perguntas diretas</p><h2>O que costumam nos perguntar</h2></div>
+    <div class="qa">
+      <div><h3>A água pronta resolve tudo?</h3><p>Não. O cliente ainda precisa entender alimentação, filtragem e ciclagem. Por isso existe o atendimento educativo.</p></div>
+      <div><h3>Por que loja física, e não só online?</h3><p>Por causa da água. Os galões são pesados e voltam para a loja. O digital é apoio.</p></div>
+      <div><h3>E se copiarem o modelo?</h3><p>Conhecimento técnico, processo próprio de preparar a água e relacionamento com o cliente são difíceis de copiar rápido.</p></div>
+      <div><h3>De onde vem o dinheiro?</h3><p>Da venda inicial do aquário montado e da receita recorrente de água, ração e manutenção.</p></div>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<footer>
+  <div class="wrap">
+    <blockquote>O fim da frustração. O começo de um ecossistema perfeito.</blockquote>
+    <p>Aquilibrium · Projeto de Empreendedorismo e Inovação · Administração, 3º semestre · Prof. Dr. Aldo Jr.</p>
+  </div>
+</footer>
+
+<script>
+(function(){
+"use strict";
+var calm = matchMedia("(prefers-reduced-motion: reduce)").matches;
+var tank = document.getElementById("tank");
+var glc = document.getElementById("gl"), lc = document.getElementById("life");
+var ctx = lc.getContext("2d");
+var W = 0, H = 0, DPR = 1, small = false;
+
+var MODES = {
+  neutra:   {tint:[.82,1.0,1.12], amt:.35, read:["Para iniciantes","pH perto de 7","Guppy e platy"], plants:.25,
+             fish:[["guppy",9],["platy",6]], shrimp:0},
+  acida:    {tint:[1.3,.92,.58], amt:.62, read:["Água macia","pH abaixo de 7","Tetra-neon e acará-disco"], plants:.35,
+             fish:[["neon",26],["disco",3]], shrimp:0},
+  camaroes: {tint:[.86,1.08,.92], amt:.3, read:["GH para trocar a casca","KH segura o pH","Camarões de água doce"], plants:.55,
+             fish:[], shrimp:14},
+  plantados:{tint:[.74,1.2,.72], amt:.5, read:["Aquário natural","Plantas, pedras e troncos","Tetra-neon entre a folhagem"], plants:1,
+             fish:[["neon",18]], shrimp:4}
+};
+var mode = "neutra", tint = MODES.neutra.tint.slice(), amt = MODES.neutra.amt, plantK = MODES.neutra.plants;
+
+/* ---------- água (WebGL) ---------- */
+var gl = null, U = {}, ripples = [], startT = performance.now(), texW = 1920, texH = 1080;
+var FS = [
+"precision highp float;",
+"uniform sampler2D T;uniform vec2 R;uniform vec2 C;uniform float t;uniform vec3 tint;uniform float amt;uniform vec3 rp[6];",
+"float caus(vec2 p,float tm){vec2 i=p;float c=1.;for(int n=0;n<5;n++){float q=tm*(1.-3.5/float(n+1));",
+" i=p+vec2(cos(q-i.x)+sin(q+i.y),sin(q-i.y)+cos(q+i.x));",
+" c+=1./length(vec2(p.x/(sin(i.x+q)/.005),p.y/(cos(i.y+q)/.005)));}",
+" c/=5.;c=1.17-pow(c,1.4);return pow(abs(c),8.);}",
+"void main(){vec2 uv=gl_FragCoord.xy/R;float a=R.x/R.y;vec2 p=vec2(uv.x*a,uv.y);",
+" vec2 off=vec2(sin(p.y*16.+t*.9+sin(p.x*5.+t*.4)*2.),cos(p.x*13.-t*.7+sin(p.y*6.-t*.3)*2.))*.0022;",
+" float glow=0.;",
+" for(int i=0;i<6;i++){vec3 r=rp[i];if(r.z<0.)continue;vec2 d=p-r.xy;float l=length(d)+1e-4;float rad=r.z*.42;",
+"  float e=exp(-pow((l-rad)*11.,2.))*exp(-r.z*1.3);float w=sin((l-rad)*48.);off+=d/l*w*e*.013;glow+=max(w,0.)*e*.45;}",
+" vec2 tv=(uv-.5)*C+.5+off;vec3 col=texture2D(T,tv).rgb;",
+" float ca=caus(mod(p*5.2+off*30.,6.2831853)-250.,t*.42);",
+" float bandB=smoothstep(.34,.02,uv.y),bandT=smoothstep(.62,1.,uv.y);",
+" col+=ca*vec3(.42,.86,.74)*(bandB*.95+bandT*.5+.07);",
+" vec2 s=vec2(a*.64,1.25);vec2 dd=p-s;float an=atan(dd.x,-dd.y);",
+" float ray=pow(max(sin(an*15.+t*.17)*sin(an*27.-t*.11+1.3)*.5+.5,0.),3.);",
+" col+=ray*vec3(.24,.6,.68)*smoothstep(.12,1.,uv.y)*smoothstep(.95,.1,abs(an))*.5;",
+" col=mix(col,col*tint*1.12+tint*.018,amt);",
+" col+=glow*vec3(.45,.8,.8)*.5;",
+" float vg=smoothstep(1.25,.3,length((uv-.5)*vec2(1.3,1.)));col*=mix(.74,1.06,vg);",
+" gl_FragColor=vec4(col,1.);}"
+].join("\n");
+function initGL(img){
+  gl = glc.getContext("webgl",{antialias:false,alpha:false,powerPreference:"low-power"});
+  if(!gl) return false;
+  function sh(ty,src){var s=gl.createShader(ty);gl.shaderSource(s,src);gl.compileShader(s);
+    if(!gl.getShaderParameter(s,gl.COMPILE_STATUS)){console.error(gl.getShaderInfoLog(s));return null;}return s;}
+  var vs=sh(gl.VERTEX_SHADER,"attribute vec2 a;void main(){gl_Position=vec4(a,0.,1.);}"), fs=sh(gl.FRAGMENT_SHADER,FS);
+  if(!vs||!fs){gl=null;return false;}
+  var pr=gl.createProgram();gl.attachShader(pr,vs);gl.attachShader(pr,fs);gl.linkProgram(pr);gl.useProgram(pr);
+  var b=gl.createBuffer();gl.bindBuffer(gl.ARRAY_BUFFER,b);gl.bufferData(gl.ARRAY_BUFFER,new Float32Array([-1,-1,3,-1,-1,3]),gl.STATIC_DRAW);
+  var l=gl.getAttribLocation(pr,"a");gl.enableVertexAttribArray(l);gl.vertexAttribPointer(l,2,gl.FLOAT,false,0,0);
+  var tx=gl.createTexture();gl.bindTexture(gl.TEXTURE_2D,tx);gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL,true);
+  gl.texImage2D(gl.TEXTURE_2D,0,gl.RGB,gl.RGB,gl.UNSIGNED_BYTE,img);
+  gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.LINEAR);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.LINEAR);
+  gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_S,gl.CLAMP_TO_EDGE);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_T,gl.CLAMP_TO_EDGE);
+  ["R","C","t","tint","amt","rp"].forEach(function(n){U[n]=gl.getUniformLocation(pr,n);});
+  texW=img.naturalWidth;texH=img.naturalHeight;
+  return true;
+}
+function drawGL(now){
+  if(!gl) return;
+  var t=(now-startT)/1000, buf=new Float32Array(18), a=W/H;
+  for(var i=0;i<6;i++){var r=ripples[i];
+    if(r){buf[i*3]=r.x/W*a;buf[i*3+1]=1-r.y/H;buf[i*3+2]=(now-r.t)/1000;}else{buf[i*3+2]=-1;}}
+  gl.uniform2f(U.R,glc.width,glc.height);
+  var ta=texW/texH, c=a>ta?[1,ta/a]:[a/ta,1];
+  gl.uniform2f(U.C,c[0],c[1]);
+  gl.uniform1f(U.t,calm?12:t);gl.uniform3f(U.tint,tint[0],tint[1],tint[2]);gl.uniform1f(U.amt,amt);
+  gl.uniform3fv(U.rp,buf);gl.drawArrays(gl.TRIANGLES,0,3);
+}
+
+/* ---------- vida (Canvas 2D) ---------- */
+function rnd(a,b){return a+Math.random()*(b-a);}
+function lerp(a,b,k){return a+(b-a)*k;}
+var fish=[], shrimp=[], blades=[], bubbles=[], school={x:0,y:0,tx:0,ty:0,wait:0};
+var GUPPY=[["#ff9a3d","#2fb7ff"],["#ffd34d","#ff4f7b"],["#7ff0d6","#5b7cff"]];
+var SIZE={guppy:[30,40],platy:[30,38],neon:[20,27],disco:[62,78]};
+
+function spawnFish(kind,i,n){
+  var left=Math.random()<.5, s=rnd(SIZE[kind][0],SIZE[kind][1])*(small?.8:1);
+  var f={k:kind,s:s,x:left?-30-rnd(0,90):W+30+rnd(0,90),y:rnd(H*.16,H*.74),vx:0,vy:0,face:left?1:-1,ph:rnd(0,6.28),
+    tx:rnd(W*.08,W*.92),ty:rnd(H*.14,H*.74),wait:rnd(0,3),burst:0,pal:GUPPY[i%3],ox:rnd(-1,1),oy:rnd(-1,1),leaving:false,cruise:kind==="disco"?22:kind==="neon"?60:42};
+  return f;
+}
+function populate(){
+  var m=MODES[mode];
+  fish.forEach(function(f){f.leaving=true;f.tx=f.x<W/2?-260:W+260;f.ty=f.y;});
+  shrimp.forEach(function(s){s.leaving=true;});
+  m.fish.forEach(function(e){var n=small?Math.ceil(e[1]*.6):e[1];for(var i=0;i<n;i++)fish.push(spawnFish(e[0],i,n));});
+  var ns=small?Math.ceil(m.shrimp*.6):m.shrimp;
+  for(var i=0;i<ns;i++)shrimp.push({x:rnd(W*.05,W*.95),s:rnd(24,34),dir:Math.random()<.5?1:-1,ph:rnd(0,6),go:rnd(0,3),hop:0,a:0,leaving:false});
+  school.x=W*.6;school.y=H*.4;school.tx=W*.6;school.ty=H*.4;
+  if(calm) placeCalm();
+}
+function placeCalm(){ /* cena parada, sem movimento */
+  fish=fish.filter(function(f){return !f.leaving;});shrimp=shrimp.filter(function(s){return !s.leaving;});
+  fish.forEach(function(f){f.x=rnd(W*.1,W*.9);f.y=rnd(H*.14,H*.62);f.face=Math.random()<.5?1:-1;});
+  shrimp.forEach(function(s){s.a=1;});
+}
+function buildPlants(){
+  blades=[];
+  var n=small?70:150;
+  for(var i=0;i<n;i++){
+    var edge=i%3!==0, x=edge?(Math.random()<.5?rnd(-.02,.2):rnd(.8,1.02)):rnd(.18,.82);
+    blades.push({x:x,h:rnd(.14,.5)*(edge?1:.7),w:rnd(6,19),ph:rnd(0,6.28),g:rnd(.35,1),rank:Math.random()*(edge?.75:1)});
+  }
+  blades.sort(function(a,b){return b.h-a.h;});
+}
+function drawPlants(t){
+  for(var i=0;i<blades.length;i++){var b=blades[i];
+    var k=Math.max(0,Math.min(1,(plantK-b.rank)*4+ .5)); if(k<=.02) continue;
+    var x=b.x*W, y=H+6, hh=b.h*H*k, sw=Math.sin(t*.7+b.ph)*hh*.1+Math.sin(t*1.7+b.ph)*hh*.03;
+    var r=Math.round(lerp(10,62,b.g)), g=Math.round(lerp(52,138,b.g)), bl=Math.round(lerp(40,58,b.g));
+    ctx.fillStyle="rgba("+r+","+g+","+bl+","+(.62+.3*b.g)+")";
+    ctx.beginPath();ctx.moveTo(x-b.w/2,y);
+    ctx.quadraticCurveTo(x-b.w*.5+sw*.3,y-hh*.6,x+sw,y-hh);
+    ctx.quadraticCurveTo(x+b.w*.5+sw*.3,y-hh*.6,x+b.w/2,y);ctx.fill();
+  }
+}
+function bodyPath(s,h,w){
+  ctx.beginPath();ctx.moveTo(.5*s,0);
+  ctx.bezierCurveTo(.3*s,-h,-.1*s,-h*1.06,-.38*s,-h*.26+w);
+  ctx.lineTo(-.38*s,h*.26+w);
+  ctx.bezierCurveTo(-.1*s,h*1.06,.3*s,h,.5*s,0);ctx.closePath();
+}
+function eye(x,y,r){ctx.fillStyle="#f4f7ef";ctx.beginPath();ctx.arc(x,y,r,0,6.3);ctx.fill();ctx.fillStyle="#08151a";ctx.beginPath();ctx.arc(x+r*.15,y,r*.62,0,6.3);ctx.fill();}
+function drawFish(f){
+  var s=f.s, w=Math.sin(f.ph)*s*.05, tw=Math.sin(f.ph-.8)*s*.14, g;
+  ctx.save();ctx.translate(f.x,f.y);
+  var tilt=Math.max(-.4,Math.min(.4,Math.atan2(f.vy,Math.abs(f.vx)+30)));
+  ctx.scale(f.face===0?.02:f.face,1);ctx.rotate(tilt);
+  if(f.k==="neon"){
+    var h=.14*s;
+    ctx.fillStyle="rgba(205,226,226,.55)";ctx.beginPath();ctx.moveTo(-.36*s,w);ctx.lineTo(-.62*s,-.15*s+tw);ctx.lineTo(-.56*s,tw);ctx.lineTo(-.62*s,.15*s+tw);ctx.closePath();ctx.fill();
+    bodyPath(s,h,w);g=ctx.createLinearGradient(0,-h,0,h);g.addColorStop(0,"#5e7d7c");g.addColorStop(.6,"#d8e4e0");g.addColorStop(1,"#f4f7f2");ctx.fillStyle=g;ctx.fill();
+    ctx.save();ctx.clip();
+    ctx.fillStyle="#e8263f";ctx.fillRect(-.4*s,.02*s,.56*s,h);
+    ctx.fillStyle="#26e0ff";ctx.fillRect(-.4*s,-.045*s,.9*s,.06*s);
+    ctx.restore();
+    eye(.33*s,-.02*s,.042*s+.5);
+  } else if(f.k==="guppy"){
+    var h2=.13*s, gg=ctx.createLinearGradient(-.38*s,0,-.95*s,0);gg.addColorStop(0,f.pal[0]);gg.addColorStop(1,f.pal[1]);
+    ctx.fillStyle=gg;ctx.beginPath();ctx.moveTo(-.34*s,w);
+    ctx.quadraticCurveTo(-.66*s,-.2*s+tw*.6,-.98*s,-.3*s+tw);
+    ctx.quadraticCurveTo(-.86*s,tw,-.98*s,.3*s+tw);
+    ctx.quadraticCurveTo(-.66*s,.2*s+tw*.6,-.34*s,w);ctx.fill();
+    ctx.strokeStyle="rgba(255,255,255,.28)";ctx.lineWidth=.8;
+    for(var i=-2;i<=2;i++){ctx.beginPath();ctx.moveTo(-.38*s,w);ctx.lineTo(-.92*s,i*.1*s+tw);ctx.stroke();}
+    ctx.fillStyle=f.pal[1];ctx.globalAlpha=.8;ctx.beginPath();ctx.moveTo(.02*s,-h2);ctx.quadraticCurveTo(-.2*s,-.32*s,-.3*s,-.1*s);ctx.fill();ctx.globalAlpha=1;
+    bodyPath(s,h2,w);g=ctx.createLinearGradient(.5*s,0,-.38*s,0);g.addColorStop(0,"#e9edd9");g.addColorStop(.55,f.pal[0]);g.addColorStop(1,f.pal[1]);ctx.fillStyle=g;ctx.fill();
+    eye(.32*s,-.025*s,.05*s);
+  } else if(f.k==="platy"){
+    var h3=.25*s;
+    ctx.fillStyle="#c9401f";ctx.beginPath();ctx.moveTo(-.36*s,w);ctx.lineTo(-.68*s,-.2*s+tw);ctx.quadraticCurveTo(-.6*s,tw,-.68*s,.2*s+tw);ctx.closePath();ctx.fill();
+    ctx.fillStyle="#e4622c";ctx.beginPath();ctx.moveTo(.14*s,-h3*.92);ctx.quadraticCurveTo(-.08*s,-.42*s,-.24*s,-h3*.62);ctx.fill();
+    bodyPath(s,h3,w);g=ctx.createLinearGradient(0,-h3,0,h3);g.addColorStop(0,"#ff6a2b");g.addColorStop(.6,"#ff9b3f");g.addColorStop(1,"#ffd28a");ctx.fillStyle=g;ctx.fill();
+    eye(.32*s,-.05*s,.055*s);
+  } else { /* disco */
+    var R=.46*s;
+    ctx.fillStyle="rgba(240,120,50,.85)";
+    ctx.beginPath();ctx.moveTo(.34*s,-.3*s);ctx.quadraticCurveTo(-.05*s,-.68*s,-.46*s,-.22*s);ctx.lineTo(-.46*s,.22*s);ctx.quadraticCurveTo(-.05*s,.68*s,.34*s,.3*s);ctx.fill();
+    ctx.fillStyle="rgba(255,190,120,.5)";ctx.beginPath();ctx.moveTo(-.44*s,w);ctx.lineTo(-.68*s,-.13*s+tw);ctx.lineTo(-.68*s,.13*s+tw);ctx.closePath();ctx.fill();
+    ctx.beginPath();ctx.ellipse(0,0,.5*s,R,0,0,6.3);g=ctx.createRadialGradient(.1*s,-.05*s,2,0,0,.55*s);g.addColorStop(0,"#ffb45e");g.addColorStop(1,"#d9582a");ctx.fillStyle=g;ctx.fill();
+    ctx.save();ctx.clip();ctx.strokeStyle="rgba(64,214,240,.9)";ctx.lineWidth=s*.032;
+    for(var j=-5;j<=5;j++){ctx.beginPath();var yy=j*.09*s;ctx.moveTo(-.55*s,yy);
+      ctx.bezierCurveTo(-.2*s,yy-.08*s,.1*s,yy+.09*s,.55*s,yy-.02*s);ctx.stroke();}
+    ctx.fillStyle="rgba(30,20,20,.35)";ctx.fillRect(.16*s,-.5*s,.035*s,s);ctx.restore();
+    eye(.34*s,-.03*s,.05*s);
+  }
+  ctx.restore();
+}
+function drawShrimp(p,t){
+  var s=p.s, y=H*.925+Math.sin(p.x*.012)*4-p.hop;
+  ctx.save();ctx.globalAlpha=p.a;ctx.translate(p.x,y);ctx.scale(p.dir,1);
+  ctx.strokeStyle="rgba(255,140,110,.75)";ctx.lineWidth=.9;
+  ctx.beginPath();ctx.moveTo(.44*s,-.1*s);ctx.quadraticCurveTo(.9*s,-.42*s+Math.sin(t*3+p.ph)*2,1.15*s,-.12*s);ctx.stroke();
+  ctx.beginPath();ctx.moveTo(.44*s,-.08*s);ctx.quadraticCurveTo(.8*s,-.18*s,1.1*s,.1*s+Math.sin(t*2.5+p.ph)*2);ctx.stroke();
+  ctx.strokeStyle="rgba(250,110,90,.9)";ctx.lineWidth=1.1;
+  for(var i=0;i<5;i++){var lx=.26*s-i*.13*s, m=Math.sin(t*9+i+p.ph)*(p.go>0?2:0);ctx.beginPath();ctx.moveTo(lx,.04*s);ctx.lineTo(lx+m,.2*s);ctx.stroke();}
+  var seg=6;
+  for(var k=seg;k>=0;k--){var u=k/seg, a=lerp(-.55,.46,1-u)*s, b=-Math.sin(u*2.6)*.2*s-.06*s, r=lerp(.06,.17,Math.sin(u*3.1))*s+.02*s;
+    ctx.fillStyle=k%2?"#e8332c":"#ff5a3f";ctx.beginPath();ctx.ellipse(a,b+.1*s*u,r*1.1,r,0,0,6.3);ctx.fill();}
+  ctx.fillStyle="#f6f4ee";ctx.beginPath();ctx.moveTo(-.55*s,.02*s);ctx.lineTo(-.82*s,-.09*s);ctx.lineTo(-.8*s,.14*s);ctx.closePath();ctx.globalAlpha=p.a*.55;ctx.fill();ctx.globalAlpha=p.a;
+  eye(.38*s,-.12*s,.05*s);
+  ctx.restore();
+}
+function drawBubbles(dt){
+  if(!calm && bubbles.length<(small?10:20) && Math.random()<.09) bubbles.push({x:W*rnd(.8,.86),y:H*.9,r:rnd(1.2,3.6),v:rnd(46,90),p:rnd(0,6)});
+  ctx.strokeStyle="rgba(220,245,245,.55)";ctx.lineWidth=.8;
+  for(var i=bubbles.length-1;i>=0;i--){var b=bubbles[i];b.y-=b.v*dt;b.p+=dt*3;
+    ctx.beginPath();ctx.arc(b.x+Math.sin(b.p)*3,b.y,b.r,0,6.3);ctx.stroke();
+    if(b.y<H*.05) bubbles.splice(i,1);}
+}
+function step(dt,t){
+  school.wait-=dt;
+  if(school.wait<=0){school.tx=rnd(W*.12,W*.88);school.ty=rnd(H*.16,H*.62);school.wait=rnd(4,8);}
+  school.x+=(school.tx-school.x)*dt*.35;school.y+=(school.ty-school.y)*dt*.35;
+  for(var i=fish.length-1;i>=0;i--){var f=fish[i];
+    f.wait-=dt;f.burst=Math.max(0,f.burst-dt);
+    var tx=f.tx,ty=f.ty;
+    if(!f.leaving){
+      if(f.k==="neon"){tx=school.x+f.ox*W*.13;ty=school.y+f.oy*H*.13;}
+      else if(f.wait<=0){f.tx=rnd(W*.06,W*.94);f.ty=rnd(H*.14,H*.76);f.wait=rnd(3,8);}
+    }
+    var dx=tx-f.x,dy=ty-f.y,d=Math.hypot(dx,dy)||1,out=f.x<0||f.x>W,sp=f.cruise*(f.burst>0?5:f.leaving?8:out?4:1)*Math.min(1,d/60+.15);
+    var k=Math.min(1,dt*(f.burst>0?1:1.6));
+    if(f.burst<=0){f.vx=lerp(f.vx,dx/d*sp,k);f.vy=lerp(f.vy,dy/d*sp*.7,k);}
+    f.x+=f.vx*dt;f.y+=f.vy*dt;
+    f.ph+=dt*(5+Math.hypot(f.vx,f.vy)*.13);
+    var want=f.vx>=0?1:-1;if(Math.abs(f.vx)>4){f.face=lerp(f.face,want,Math.min(1,dt*7));}
+    if(Math.abs(f.face)<.04)f.face=.04*want;
+    if(f.leaving&&(f.x<-200||f.x>W+200))fish.splice(i,1);
+  }
+  for(var j=shrimp.length-1;j>=0;j--){var p=shrimp[j];
+    p.a=p.leaving?Math.max(0,p.a-dt*1.6):Math.min(1,p.a+dt*1.2);
+    p.hop=Math.max(0,p.hop-dt*40);p.go-=dt;
+    if(p.go>0)p.x+=p.dir*dt*13;else if(p.go<-rnd(1,2.6)){p.go=rnd(1,3.5);if(Math.random()<.4)p.dir*=-1;}
+    if(p.x<20)p.dir=1;if(p.x>W-20)p.dir=-1;
+    if(p.leaving&&p.a<=0)shrimp.splice(j,1);
+  }
+}
+function paint(t,dt){
+  ctx.setTransform(DPR,0,0,DPR,0,0);ctx.clearRect(0,0,W,H);
+  var order=fish.slice().sort(function(a,b){return a.s-b.s;});
+  for(var i=0;i<order.length;i++)drawFish(order[i]);
+  for(var j=0;j<shrimp.length;j++)drawShrimp(shrimp[j],t);
+  drawPlants(t);
+  drawBubbles(dt);
+}
+function resize(){
+  var r=tank.getBoundingClientRect();W=r.width;H=r.height;small=W<720;
+  DPR=Math.min(devicePixelRatio||1,2);lc.width=W*DPR;lc.height=H*DPR;
+  var gd=Math.min(devicePixelRatio||1,1.25)*glScale;glc.width=W*gd;glc.height=H*gd;
+  if(gl)gl.viewport(0,0,glc.width,glc.height);
+}
+var visible=true,last=0,raf=0,slowSum=0,slowN=0,glScale=1;
+/* máquina lenta: reduz a resolução da água */
+function watch(s){
+  if(s>.25)return;
+  slowSum+=s;if(++slowN<40)return;
+  var avg=slowSum/slowN;slowSum=0;slowN=0;
+  if(avg>.04){
+    if(glScale>.5){glScale-=.25;resize();}
+  }
+}
+function frame(now){
+  raf=0;
+  if(!visible||document.hidden)return;
+  var real=Math.min(1.2,(now-last)/1000||.016);last=now;var t=now/1000,m=MODES[mode];
+  watch(real);
+  for(var left=real;left>0;left-=.05){var dt=Math.min(.05,left);
+    for(var i=0;i<3;i++)tint[i]=lerp(tint[i],m.tint[i],dt*2.4);
+    amt=lerp(amt,m.amt,dt*2.4);plantK=lerp(plantK,m.plants,dt*1.6);step(dt,t);}
+  ripples=ripples.filter(function(r){return now-r.t<3200;});
+  drawGL(now);paint(t,Math.min(real,.05));
+  raf=requestAnimationFrame(frame);
+}
+function wake(){if(!raf&&!calm){last=performance.now();raf=requestAnimationFrame(frame);}}
+function still(){var m=MODES[mode];tint=m.tint.slice();amt=m.amt;plantK=m.plants;placeCalm();drawGL(performance.now());paint(10,0);}
+
+function setMode(k){
+  if(k===mode)return;mode=k;
+  document.querySelectorAll(".picker button").forEach(function(b){b.setAttribute("aria-pressed",String(b.dataset.mode===k));});
+  document.getElementById("readout").innerHTML=MODES[k].read.map(function(x,i){return i?"<span>"+x+"</span>":"<b>"+x+"</b>";}).join("");
+  populate();if(calm)still();
+}
+document.querySelectorAll(".picker button").forEach(function(b){b.addEventListener("click",function(e){e.stopPropagation();setMode(b.dataset.mode);});});
+document.querySelectorAll("[data-see]").forEach(function(b){b.addEventListener("click",function(){setMode(b.dataset.see);tank.scrollIntoView({behavior:calm?"auto":"smooth"});});});
+tank.addEventListener("pointerdown",function(e){
+  if(e.target.closest("button,a"))return;
+  var r=tank.getBoundingClientRect(),x=e.clientX-r.left,y=e.clientY-r.top;
+  if(!calm){ripples.push({x:x,y:y,t:performance.now()});if(ripples.length>6)ripples.shift();}
+  fish.forEach(function(f){var dx=f.x-x,dy=f.y-y,d=Math.hypot(dx,dy)||1;
+    if(d<230&&!f.leaving){f.burst=.55;var v=300*(1-d/300)+70;f.vx=dx/d*v;f.vy=dy/d*v*.7;}});
+  shrimp.forEach(function(p){if(Math.abs(p.x-x)<130){p.hop=16;p.dir=p.x<x?-1:1;p.go=1.2;}});
+});
+if("IntersectionObserver" in window){new IntersectionObserver(function(es){visible=es[0].isIntersecting;if(visible)wake();}).observe(tank);}
+document.addEventListener("visibilitychange",wake);
+var rz=0;addEventListener("resize",function(){clearTimeout(rz);rz=setTimeout(function(){resize();if(calm)still();},120);});
+
+function boot(){
+  resize();buildPlants();
+  var img=new Image();
+  img.onload=function(){
+    try{ if(initGL(img)){glc.style.background="none";} }catch(e){gl=null;}
+    if(!gl)glc.style.display="none";
+    resize();
+    if(calm)still();else wake();
+  };
+  img.src="{{img:agua}}";
+  populate();
+  fish.forEach(function(f){f.x=rnd(W*.1,W*.9);f.y=rnd(H*.16,H*.66);});
+  shrimp.forEach(function(s){s.a=1;});
+}
+boot();
+
+/* laboratório de pH */
+var phr=document.getElementById("phr"),phv=document.getElementById("phv"),pht=document.getElementById("pht"),phs=document.getElementById("phs"),
+    amb=document.getElementById("amb"),amtx=document.getElementById("amt"),lis=[].slice.call(document.querySelectorAll("#species li"));
+function fmt(x,d){return x.toLocaleString("pt-BR",{minimumFractionDigits:d,maximumFractionDigits:d});}
+function times(r){return r>=100?fmt(Math.round(r/10)*10,0):r>=10?fmt(Math.round(r),0):fmt(r,1);}
+function updatePH(){
+  var v=parseFloat(phr.value);phv.textContent=fmt(v,1);
+  var d=Math.round((v-7)*10)/10;
+  if(d===0){pht.textContent="Água neutra";phs.textContent="Ponto de referência da escala";}
+  else if(d<0){pht.textContent="Água ácida";phs.textContent=times(Math.pow(10,-d))+" vezes mais ácida que pH 7";}
+  else{pht.textContent="Água alcalina";phs.textContent=times(Math.pow(10,d))+" vezes menos ácida que pH 7";}
+  phv.style.setProperty("--ph",v<6.2?"#e6a94c":v<6.9?"#efc877":v<=7.1?"#9be3ee":v<8?"#6fe3cf":"#7fb2ff");
+  var a=(v-5)/4;amb.style.width=(8+a*92)+"%";
+  var lv=v<6.5?["Baixa","#a5d94f"]:v<7.6?["Média","#f4bb4a"]:["Alta","#ff8a66"];
+  amtx.textContent=lv[0];amb.style.background=lv[1];
+  lis.forEach(function(li){var mn=+li.dataset.min,mx=+li.dataset.max,p=li.querySelector(".pill"),
+    off=v<mn?mn-v:v>mx?v-mx:0,c=off===0?["ok","Confortável"]:off<=.5?["warn","Estresse"]:["bad","Risco"];
+    p.className="pill "+c[0];p.textContent=c[1];});
+}
+phr.addEventListener("input",updatePH);updatePH();
+})();
+</script>
+</body>
+</html>
